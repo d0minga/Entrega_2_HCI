@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Compara: compara publicaciones sin perder el hilo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{--bg:#EEF2F5;--surf:#fff;--ink:#14232E;--mute:#52636F;--line:#CBD5DC;--acc:#0B5C7A;--acc-ink:#fff;--pend-bg:#FFF1CC;--pend:#7A4B00;--diff-bg:#FFE3DD;--diff:#8A2410;--ok:#14663B;--ok-bg:#DDF3E5;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1A22;--surf:#18262F;--ink:#E8EEF2;--mute:#9DB0BC;--line:#2D4250;--acc:#5BC0E3;--acc-ink:#06212C;--pend-bg:#3A2D0B;--pend:#FFD27A;--diff-bg:#43201A;--diff:#FFB4A3;--ok:#7BDFA3;--ok-bg:#16382A;color-scheme:dark}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Atkinson Hyperlegible",system-ui,Arial,sans-serif}
+header{background:var(--surf);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+h1{font-size:1.35rem;margin:0}h2{font-size:1.2rem;margin:0 0 8px}h3{font-size:1rem;margin:0}
+.demo{background:var(--pend-bg);color:var(--pend);padding:6px 16px;font-size:.88rem}
+nav{display:flex;gap:4px;margin-left:auto}
+nav button{border:0;background:none;color:var(--mute);font:inherit;padding:8px 12px;border-bottom:3px solid transparent;cursor:pointer}
+nav button[aria-current=page]{color:var(--ink);border-color:var(--acc);font-weight:700}
+main{max-width:1100px;margin:0 auto;padding:16px}
+button,input,textarea{font:inherit;color:inherit}
+.btn{background:var(--acc);color:var(--acc-ink);border:0;border-radius:8px;padding:9px 14px;cursor:pointer;font-weight:700}
+.btn.sec{background:none;color:var(--acc);border:1.5px solid var(--acc)}
+.btn.sm{padding:5px 10px;font-size:.88rem}.btn[disabled]{opacity:.55;cursor:default}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+input[type=text],textarea{width:100%;padding:10px;border:1.5px solid var(--line);border-radius:8px;background:var(--surf)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.chip{border:1.5px solid var(--line);background:var(--surf);border-radius:20px;padding:6px 14px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:14px;margin:10px 0;display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;align-items:center}
+.bar{background:var(--surf);border:1px solid var(--line);border-left:5px solid var(--acc);border-radius:8px;padding:10px 14px;display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.mute{color:var(--mute);font-size:.9rem}
+.pend{background:var(--pend-bg);color:var(--pend);padding:1px 7px;border-radius:5px;font-style:italic;white-space:nowrap}
+.pend::before{content:"? "}
+.tag{display:inline-block;background:var(--ok-bg);color:var(--ok);padding:1px 8px;border-radius:5px;font-size:.85rem}
+.wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surf)}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{padding:9px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line);min-width:170px}
+th:first-child,td:first-child{position:sticky;left:0;background:var(--surf);min-width:130px;max-width:140px;z-index:1;font-weight:700}
+tr.grp td{background:var(--bg);color:var(--mute);font-size:.85rem;font-weight:700}
+tr.diff td{background:var(--diff-bg);color:var(--diff)}
+tr.tot td{font-size:1.05rem;font-weight:700;border-top:2px solid var(--ink)}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:10px 0}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--surf);color:var(--ink);max-width:520px;width:calc(100% - 24px);padding:18px}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dl{display:grid;grid-template-columns:140px 1fr;gap:6px 10px;margin:10px 0}dt{color:var(--mute)}dd{margin:0}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;display:none;z-index:9}
+.ok{background:var(--ok-bg);color:var(--ok);padding:10px 14px;border-radius:8px;margin:10px 0}
+</style>
+</head>
+<body>
+<header><h1>Compara</h1><nav id="nav" aria-label="Secciones"></nav></header>
+<div class="demo">Datos de demostración: tiendas, vendedores, precios y garantías son ficticios.</div>
+<main id="app"></main>
+<dialog id="dlg"></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+const DATA=[
+{id:'r1',cat:'Refrigerador',t:'Refrigerador No Frost 420 L',store:'Alfa Hogar',seller:'Alfa Hogar',resp:'Alfa Hogar',off:true,price:549990,card:519990,ship:14990,inst:null,war:'12 meses del fabricante, gestionados por la tienda',spec:{'Modelo':'RF-420','Capacidad':'420 L','Color':'Acero'},note:'Instalación y retiro del refrigerador antiguo: la publicación no informa el costo.'},
+{id:'r2',cat:'Refrigerador',t:'Refrigerador No Frost 421 L',store:'Marketplace Central',seller:'ElectroDirecto SpA',resp:'ElectroDirecto SpA',off:false,price:489990,card:null,ship:null,inst:null,war:null,spec:{'Modelo':'RF-420N','Capacidad':'421 L','Color':'Acero'},note:'Vendedor externo. La publicación no indica garantía ni costo de despacho.'},
+{id:'r3',cat:'Refrigerador',t:'Refrigerador No Frost 420 Litros',store:'Tienda Beta',seller:'Tienda Beta',resp:'Tienda Beta',off:false,price:529990,card:499990,ship:0,inst:24990,war:'12 meses, la tienda gestiona reclamos',spec:{'Modelo':'RF-420','Capacidad':'420 L','Color':'Acero'},note:'Incluye retiro del equipo antiguo dentro del costo de instalación.'},
+{id:'n1',cat:'Notebook',t:'Notebook 15" 16 GB / 512 GB',store:'Alfa Hogar',seller:'Alfa Hogar',resp:'Alfa Hogar',off:true,price:599990,card:559990,ship:0,war:'12 meses del fabricante, gestionados por la tienda',spec:{'RAM':'16 GB','Disco':'512 GB SSD','Pantalla':'15,6"'},note:'Precio con tarjeta de la tienda disponible.'},
+{id:'n2',cat:'Notebook',t:'Notebook 15,6" 16 GB / 512 GB',store:'Tienda Beta',seller:'Tienda Beta',resp:'Tienda Beta',off:false,price:579990,card:null,ship:9990,war:'12 meses',spec:{'RAM':'16 GB','Disco':'512 GB SSD','Pantalla':'15,6"'},note:'Sin información del modelo exacto del procesador.'},
+{id:'n3',cat:'Notebook',t:'Notebook 15,6" 8 GB / 512 GB',store:'Marketplace Central',seller:'TecnoMax',resp:'TecnoMax',off:false,price:519990,card:null,ship:null,war:null,spec:{'RAM':'8 GB','Disco':'512 GB SSD','Pantalla':'15,6"'},note:'Vendedor externo, sin garantía informada.'},
+{id:'z1',cat:'Zapatillas',t:'Zapatillas Runner 2 negras',store:'Tienda oficial Marca',seller:'Marca',resp:'Marca',off:true,price:59990,card:null,ship:3990,war:'Cambio por falla de fábrica, 30 días',spec:{'Modelo':'Runner 2','Color':'Negro','Material':'Malla'},note:'Tienda oficial de la marca.'},
+{id:'z2',cat:'Zapatillas',t:'Zapatillas Runner 2 negro',store:'Alfa Hogar',seller:'Alfa Hogar',resp:'Alfa Hogar',off:false,price:54990,card:null,ship:0,war:'Cambio por falla, 15 días',spec:{'Modelo':'Runner 2','Color':'Negro','Material':'Malla'},note:'Revendedor autorizado según la publicación.'},
+{id:'z3',cat:'Zapatillas',t:'Zapatillas Runner 2 Lite grises',store:'Marketplace Central',seller:'Deportes Sur',resp:'Deportes Sur',off:false,price:44990,card:null,ship:null,war:null,spec:{'Modelo':'Runner 2 Lite','Color':'Gris','Material':'Sintético'},note:'Las fotos muestran un modelo distinto al de las otras publicaciones.'}];
+const CATS=['Refrigerador','Notebook','Zapatillas'];
+let S={view:'buscar',cat:'Refrigerador',q:'',comps:[],cur:null};
+try{const x=JSON.parse(localStorage.getItem('compara_v1'));if(x){S.comps=x.comps||[];S.cur=x.cur||null}}catch(e){}
+const save=()=>{try{localStorage.setItem('compara_v1',JSON.stringify({comps:S.comps,cur:S.cur}))}catch(e){}};
+const $=i=>document.getElementById(i);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>'$'+n.toLocaleString('es-CL');
+const P=id=>DATA.find(d=>d.id===id);
+const comp=()=>S.comps.find(c=>c.id===S.cur);
+const pend='<span class="pend">Por confirmar</span>';
+const cell=(v,fmt)=>v===null?pend:v===undefined?'<span class="mute">No aplica</span>':v===0?'Gratis':fmt?fmt(v):esc(v);
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',2600)}
+function go(v){S.view=v;render();window.scrollTo(0,0)}
+function eff(p,c){return c.pay==='tarjeta'&&p.card?p.card:p.price}
+function total(p,c){let s=eff(p,c);const miss=[];
+ if(p.ship===null)miss.push('despacho');else s+=p.ship;
+ if(p.inst===null)miss.push('instalación y retiro');else if(p.inst)s+=p.inst;
+ if(p.war===null)miss.push('garantía');
+ return{s,miss}}
+function render(){
+ $('nav').innerHTML=[['buscar','Buscar'],['mis','Mis comparaciones'],['comparar','Comparar']].map(([k,l])=>`<button ${S.view===k?'aria-current="page"':''} onclick="go('${k}')">${l}</button>`).join('');
+ $('app').innerHTML=({buscar:vBuscar,mis:vMis,comparar:vComparar})[S.view]();
+}
+function activeBar(){const c=comp();return c?`<div class="bar"><span>Comparación activa: <b>${esc(c.name)}</b> (${c.items.length} de 4 publicaciones)</span><button class="btn sm" onclick="go('comparar')">Ir a comparar</button></div>`:`<div class="bar"><span class="mute">Aún no tienes una comparación. Agrega una publicación para crearla.</span></div>`}
+function vBuscar(){
+ const q=S.q.toLowerCase();const c=comp();
+ const list=DATA.filter(d=>d.cat===S.cat&&(d.t+d.store).toLowerCase().includes(q));
+ return `<h2>Buscar publicaciones</h2>${activeBar()}
+ <label class="mute" for="q">Palabra del producto o la tienda</label>
+ <input type="text" id="q" value="${esc(S.q)}" oninput="S.q=this.value;rs()" placeholder="Ej.: 420, Beta, negro">
+ <div class="chips" role="group" aria-label="Categoría">${CATS.map(k=>`<button class="chip" aria-pressed="${S.cat===k}" onclick="S.cat='${k}';render()">${k}</button>`).join('')}</div>
+ <div id="res">${resultados(list,c)}</div>`}
+function rs(){const q=S.q.toLowerCase();$('res').innerHTML=resultados(DATA.filter(d=>d.cat===S.cat&&(d.t+d.store).toLowerCase().includes(q)),comp())}
+function resultados(list,c){if(!list.length)return '<p class="mute">Sin resultados. Prueba con otra palabra o categoría.</p>';
+ return list.map(p=>{const inn=c&&c.items.includes(p.id);return `<div class="card"><div><h3>${esc(p.t)}</h3><div class="mute">${esc(p.store)} · Publica: ${esc(p.seller)}</div>
+ <div><b>${money(p.price)}</b> ${p.ship===null?pend.replace('confirmar','confirmar despacho'):''}</div></div>
+ <div class="row"><button class="btn sec sm" onclick="detalle('${p.id}')">Ver detalle</button>
+ <button class="btn sm" ${inn?'disabled':''} onclick="add('${p.id}')">${inn?'Agregada ✓':'Agregar a la comparación'}</button></div></div>`}).join('')}
+function add(id){const p=P(id);let c=comp();
+ if(!c||c.cat!==p.cat){c={id:'c'+Date.now(),name:'Comparación de '+p.cat.toLowerCase(),cat:p.cat,items:[],pay:'normal',show:{costos:1,vend:1,spec:1},decision:null,upd:Date.now()};S.comps.unshift(c);S.cur=c.id}
+ if(c.items.length>=4){toast('Máximo 4 publicaciones. Quita una para agregar otra.');return}
+ c.items.push(id);c.upd=Date.now();save();render();toast(`Agregada a “${c.name}” (${c.items.length} de 4)`)}
+function detalle(id){const p=P(id);
+ $('dlg').innerHTML=`<h2>${esc(p.t)}</h2><dl><dt>Tienda</dt><dd>${esc(p.store)}</dd><dt>Quién publica</dt><dd>${esc(p.seller)}</dd><dt>Quién responde</dt><dd>${esc(p.resp)}</dd><dt>Tienda oficial</dt><dd>${p.off?'<span class="tag">Sí</span>':'No'}</dd>
+ <dt>Precio publicado</dt><dd>${money(p.price)}</dd><dt>Con tarjeta</dt><dd>${p.card?money(p.card):'<span class="mute">No informado</span>'}</dd><dt>Despacho</dt><dd>${cell(p.ship,money)}</dd>${p.inst!==undefined?`<dt>Instalación/retiro</dt><dd>${cell(p.inst,money)}</dd>`:''}<dt>Garantía</dt><dd>${p.war===null?'<span class="pend">Sin información</span>':esc(p.war)}</dd>
+ ${Object.entries(p.spec).map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl><p class="mute">${esc(p.note)}</p><button class="btn" onclick="$('dlg').close()">Cerrar</button>`;$('dlg').showModal()}
+function vMis(){
+ if(!S.comps.length)return `<h2>Mis comparaciones</h2><p>No tienes comparaciones guardadas. Se guardan solas al agregar publicaciones.</p><button class="btn" onclick="go('buscar')">Buscar publicaciones</button>`;
+ return `<h2>Mis comparaciones</h2><p class="mute">Se guardan en este navegador. Retómalas cuando quieras.</p>`+S.comps.map(c=>`<div class="card"><div><h3>${esc(c.name)}</h3>
+ <div class="mute">${c.items.length} publicaciones: ${c.items.map(i=>esc(P(i).store)).join(', ')||'sin publicaciones'}</div>
+ <div>${c.decision?`<span class="tag">Decidida: ${esc(P(c.decision.id).t)}</span>`:'<span class="mute">Sin decisión todavía</span>'}</div></div>
+ <div class="row"><button class="btn sm" onclick="S.cur='${c.id}';save();go('comparar')">Retomar</button><button class="btn sec sm" onclick="del('${c.id}')">Eliminar</button></div></div>`).join('')}
+function del(id){if(!confirm('¿Eliminar esta comparación? No se puede deshacer.'))return;S.comps=S.comps.filter(c=>c.id!==id);if(S.cur===id)S.cur=null;save();render();toast('Comparación eliminada')}
+function setC(k,v){const c=comp();c[k]=v;c.upd=Date.now();save();render()}
+function tog(k){const c=comp();c.show[k]=c.show[k]?0:1;save();render()}
+function rem(id){const c=comp();c.items=c.items.filter(i=>i!==id);if(c.decision&&c.decision.id===id)c.decision=null;save();render();toast('Publicación quitada de la comparación')}
+function vComparar(){const c=comp();
+ if(!c)return `<h2>Comparar</h2><p>Aún no hay una comparación activa. Busca productos y agrégalos, o retoma una guardada.</p><div class="row"><button class="btn" onclick="go('buscar')">Buscar publicaciones</button><button class="btn sec" onclick="go('mis')">Mis comparaciones</button></div>`;
+ const it=c.items.map(P);
+ let h=`<h2>Comparar</h2><div class="row"><label for="nm" class="mute">Nombre</label><input type="text" id="nm" style="max-width:320px" value="${esc(c.name)}" onchange="setC('name',this.value||'Sin nombre')"></div>`;
+ if(it.length<2)return h+`<p>Agrega al menos 2 publicaciones para compararlas lado a lado.</p><button class="btn" onclick="go('buscar')">Agregar publicaciones</button>`;
+ h+=`<div class="row"><fieldset style="border:0;padding:0;margin:0"><legend class="mute">Medio de pago</legend>
+ <label><input type="radio" name="pay" ${c.pay==='normal'?'checked':''} onchange="setC('pay','normal')"> Cualquier medio</label>
+ <label style="margin-left:12px"><input type="radio" name="pay" ${c.pay==='tarjeta'?'checked':''} onchange="setC('pay','tarjeta')"> Tarjeta de la tienda</label></fieldset>
+ <div class="chips" role="group" aria-label="Qué mostrar">${[['costos','Costos'],['vend','Vendedor y garantía'],['spec','Características']].map(([k,l])=>`<button class="chip" aria-pressed="${!!c.show[k]}" onclick="tog('${k}')">${l}</button>`).join('')}</div></div>`;
+ if(c.decision){const d=c.decision;h+=`<div class="ok"><b>Decisión registrada:</b> ${esc(P(d.id).t)} (${esc(P(d.id).store)}), total conocido ${money(d.total)}. ${d.reason?'Motivo: '+esc(d.reason):''} <button class="btn sec sm" onclick="decidir(null)">Cambiar</button></div>`}
+ h+=`<p class="mute">Las filas en rojo con ⚠ difieren entre publicaciones: revisa si es el mismo modelo. Lo marcado “Por confirmar” no está informado y no se suma al total. Compara no recomienda una opción: decides tú.</p>
+ <div class="wrap"><table><tr><td></td>${it.map(p=>`<th scope="col">${esc(p.t)}<div class="mute" style="font-weight:400">${esc(p.store)}</div><div class="row" style="margin:6px 0 0"><button class="btn sec sm" onclick="detalle('${p.id}')">Detalle</button><button class="btn sec sm" onclick="rem('${p.id}')">Quitar</button></div></th>`).join('')}</tr>`;
+ const row=(l,f,cls='')=>`<tr class="${cls}"><td>${l}</td>${it.map(p=>`<td>${f(p)}</td>`).join('')}</tr>`;
+ const grp=l=>`<tr class="grp"><td colspan="${it.length+1}">${l}</td></tr>`;
+ if(c.show.costos){h+=grp('Costos')+row('Precio publicado',p=>money(p.price))
+  +row('Con tarjeta',p=>p.card?money(p.card):'<span class="mute">No informado</span>')
+  +row('Despacho',p=>cell(p.ship,money))
+  +row('Instalación y retiro',p=>cell(p.inst,money))
+  +row('Total conocido',p=>{const t=total(p,c);return money(t.s)+(t.miss.length?`<div class="mute" style="font-weight:400">Falta: ${t.miss.join(', ')}</div>`:'')},'tot')}
+ if(c.show.vend){h+=grp('Vendedor y respaldo')+row('Quién publica',p=>esc(p.seller))+row('Quién responde',p=>esc(p.resp))+row('Tienda oficial',p=>p.off?'<span class="tag">Sí</span>':'No')+row('Garantía',p=>p.war===null?'<span class="pend">Sin información</span>':esc(p.war))}
+ if(c.show.spec){h+=grp('Características');Object.keys(it[0].spec).forEach(k=>{const vs=it.map(p=>p.spec[k]);const df=new Set(vs).size>1;h+=row((df?'⚠ ':'')+k+(df?' (difiere)':''),p=>esc(p.spec[k]),df?'diff':'')})}
+ h+=row('Mi decisión',p=>c.decision&&c.decision.id===p.id?'<span class="tag">Elegida ✓</span>':`<button class="btn sm" onclick="decidir('${p.id}')">Elegir esta</button>`);
+ return h+'</table></div>'}
+function decidir(id){const c=comp();if(id===null){c.decision=null;save();render();return}
+ const p=P(id),t=total(p,c);
+ $('dlg').innerHTML=`<h2>Elegir esta publicación</h2><p><b>${esc(p.t)}</b><br>${esc(p.store)} · Total conocido: <b>${money(t.s)}</b></p>
+ ${t.miss.length?`<p class="pend" style="white-space:normal">Aún por confirmar: ${t.miss.join(', ')}. Puedes elegir igual, pero consúltalo con el vendedor antes de pagar.</p>`:'<p class="tag">Todos los costos y la garantía están informados.</p>'}
+ <p><b>Quién responde si hay un problema:</b> ${esc(p.resp)}</p>
+ <label for="rz" class="mute">¿Por qué esta? (opcional)</label><textarea id="rz" rows="3" placeholder="Ej.: pago más porque sé a quién reclamar"></textarea>
+ <div class="row"><button class="btn" id="ok">Confirmar decisión</button><button class="btn sec" onclick="$('dlg').close()">Cancelar</button></div>`;
+ $('dlg').showModal();$('ok').onclick=()=>{c.decision={id,reason:$('rz').value.trim(),total:t.s,at:Date.now()};c.upd=Date.now();save();$('dlg').close();render();toast('Decisión registrada en tu comparación')}}
+render();
+</script>
+</body>
+</html>
