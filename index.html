@@ -6,14 +6,14 @@
 <title>Compara: compara publicaciones sin perder el hilo</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
-:root{--bg:#EEF2F5;--surf:#fff;--ink:#14232E;--mute:#52636F;--line:#CBD5DC;--acc:#0B5C7A;--acc-ink:#fff;--pend-bg:#FFF1CC;--pend:#7A4B00;--diff-bg:#FFE3DD;--diff:#8A2410;--ok:#14663B;--ok-bg:#DDF3E5;
+:root{--bg:#EEF2F5;--surf:#fff;--ink:#14232E;--mute:#52636F;--line:#CBD5DC;--acc:#0B5C7A;--acc-ink:#fff;--pend-bg:#FFF1CC;--pend:#7A4B00;--diff-bg:#E1EEF5;--diff:#0B3D52;--ok:#14663B;--ok-bg:#DDF3E5;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1A22;--surf:#18262F;--ink:#E8EEF2;--mute:#9DB0BC;--line:#2D4250;--acc:#5BC0E3;--acc-ink:#06212C;--pend-bg:#3A2D0B;--pend:#FFD27A;--diff-bg:#43201A;--diff:#FFB4A3;--ok:#7BDFA3;--ok-bg:#16382A;color-scheme:dark}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1A22;--surf:#18262F;--ink:#E8EEF2;--mute:#9DB0BC;--line:#2D4250;--acc:#5BC0E3;--acc-ink:#06212C;--pend-bg:#3A2D0B;--pend:#FFD27A;--diff-bg:#173545;--diff:#BFE6F5;--ok:#7BDFA3;--ok-bg:#16382A;color-scheme:dark}}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Atkinson Hyperlegible",system-ui,Arial,sans-serif}
 header{background:var(--surf);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-h1{font-size:1.35rem;margin:0}h2{font-size:1.2rem;margin:0 0 8px}h3{font-size:1rem;margin:0}
+h1{font-size:1.35rem;margin:0}h1 a{color:inherit;text-decoration:none}h2{font-size:1.2rem;margin:0 0 8px}h3{font-size:1rem;margin:0}
 .demo{background:var(--pend-bg);color:var(--pend);padding:6px 16px;font-size:.88rem}
 nav{display:flex;gap:4px;margin-left:auto}
 nav button{border:0;background:none;color:var(--mute);font:inherit;padding:8px 12px;border-bottom:3px solid transparent;cursor:pointer}
@@ -63,7 +63,7 @@ td.flash{animation:flash 1.8s ease-out}
 </style>
 </head>
 <body>
-<header><h1>Compara</h1><nav id="nav" aria-label="Secciones"></nav></header>
+<header><h1><a href="#" onclick="go('buscar');return false" aria-label="Compara, ir al inicio">Compara</a></h1><nav id="nav" aria-label="Secciones"></nav></header>
 <div class="demo">Datos de demostración: tiendas, vendedores, precios y garantías son ficticios.</div>
 <main id="app"></main>
 <dialog id="dlg"></dialog>
@@ -120,6 +120,7 @@ function dock(){const c=comp();if(!c||!c.items.length)return '';const n=c.items.
 function rs(){const q=S.q.toLowerCase();$('res').innerHTML=resultados(DATA.filter(d=>d.cat===S.cat&&(d.t+d.store).toLowerCase().includes(q)),comp())}
 function resultados(list,c){if(!list.length)return '<p class="mute">Sin resultados. Prueba con otra palabra o categoría.</p>';
  return list.map(p=>{const inn=c&&c.items.includes(p.id);return `<div class="card"><div><h3>${esc(p.t)}</h3><div class="mute">${esc(p.store)} · Publica: ${esc(p.seller)}</div>
+ <div class="mute">${Object.entries(p.spec).slice(0,2).map(([k,v])=>esc(k)+': '+esc(v)).join(' · ')}</div>
  <div><b>${money(p.price)}</b> ${p.ship===null?pend.replace('confirmar','confirmar despacho'):''}</div></div>
  <div class="row"><button class="btn sec sm" onclick="detalle('${p.id}')">Ver detalle</button>
  ${inn?`<span class="tag">Agregada ✓</span><button class="btn sec sm" onclick="rem('${p.id}')">Quitar</button>`:`<button class="btn sm" onclick="add('${p.id}')">Agregar a la comparación</button>`}</div></div>`}).join('')}
@@ -135,7 +136,7 @@ function vMis(){
  if(!S.comps.length)return `<h2>Mis comparaciones</h2><p>No tienes comparaciones guardadas. Se guardan solas al agregar publicaciones.</p><button class="btn" onclick="go('buscar')">Buscar publicaciones</button>`;
  return `<h2>Mis comparaciones</h2><p class="mute">Se guardan en este navegador. Retómalas cuando quieras.</p>`+S.comps.map(c=>`<div class="card"><div><h3>${esc(c.name)}</h3>
  <div class="mute">${c.items.length} publicaciones: ${c.items.map(i=>esc(P(i).store)).join(', ')||'sin publicaciones'}</div>
- <div>${c.decision?`<span class="tag">Decidida: ${esc(P(c.decision.id).t)}</span>`:'<span class="mute">Sin decisión todavía</span>'}</div></div>
+ <div>${c.decision?`<span class="tag">Decidida: ${esc(P(c.decision.id).t)}</span>${c.decision.reason?`<div class="mute">Motivo: ${esc(c.decision.reason)}</div>`:''}`:'<span class="mute">Sin decisión todavía</span>'}</div></div>
  <div class="row"><button class="btn sm" onclick="S.cur='${c.id}';save();go('comparar')">Retomar</button><button class="btn sec sm" onclick="del('${c.id}')">Eliminar</button></div></div>`).join('')}
 function del(id){if(!confirm('¿Eliminar esta comparación? No se puede deshacer.'))return;S.comps=S.comps.filter(c=>c.id!==id);if(S.cur===id)S.cur=null;save();render();toast('Comparación eliminada')}
 function setC(k,v){const c=comp();c[k]=v;c.upd=Date.now();if(k==='pay')S.flash=true;save();render();S.flash=false;
@@ -154,12 +155,12 @@ function vComparar(){const c=comp();
  h+=`<div class="row"><fieldset style="border:0;padding:0;margin:0"><legend class="mute">Medio de pago</legend>
  <label><input type="radio" name="pay" ${c.pay==='normal'?'checked':''} onchange="setC('pay','normal')"> Cualquier medio</label>
  <label style="margin-left:12px"><input type="radio" name="pay" ${c.pay==='tarjeta'?'checked':''} onchange="setC('pay','tarjeta')"> Tarjeta de la tienda <span class="mute">(la de cada publicación)</span></label></fieldset>
- <div class="chips" role="group" aria-label="Qué mostrar">${[['costos','Costos'],['vend','Vendedor y garantía'],['spec','Características']].map(([k,l])=>`<button class="chip" aria-pressed="${!!c.show[k]}" onclick="tog('${k}')">${l}</button>`).join('')}</div></div>`;
+ <div class="chips" role="group" aria-label="Qué mostrar"><span class="mute">Qué mostrar:</span>${[['costos','Costos'],['vend','Vendedor y garantía'],['spec','Características']].map(([k,l])=>`<button class="chip" aria-pressed="${!!c.show[k]}" onclick="tog('${k}')">${l}</button>`).join('')}</div></div>`;
  {const n=it.filter(p=>p.card).length;h+=`<p class="mute" role="status">${c.pay==='tarjeta'?(n===it.length?`Con tarjeta: cambió el total de las ${n} publicaciones.`:`Con tarjeta: cambió el total de ${n} de ${it.length} publicaciones; ${it.length-n===1?'la otra no tiene':`las otras ${it.length-n} no tienen`} precio con tarjeta.`):'Mostrando el precio publicado (sin tarjeta).'}</p>`}
  if(c.decision){const d=c.decision,dp=P(d.id),now=total(dp,c).s;h+=`<div class="ok"><b>Decisión registrada:</b> ${esc(dp.t)} (${esc(dp.store)}), total conocido ${money(now)}. ${d.reason?'Motivo: '+esc(d.reason):''} <button class="btn sec sm" onclick="quitarDec()">Quitar decisión</button></div>`;
   if(now!==d.total)h+=`<div class="warn"><b>El total de tu elección cambió:</b> antes ${money(d.total)}${d.pay?(d.pay==='tarjeta'?' (con tarjeta)':' (sin tarjeta)'):''}, ahora ${money(now)} (${c.pay==='tarjeta'?'con tarjeta':'sin tarjeta'}). <button class="btn sm" onclick="actDec()">Actualizar mi decisión</button></div>`;
   h+=`<p class="mute">Para cambiar tu elección, elige otra publicación en la fila “Mi decisión”: se conserva tu motivo.</p>`}
- h+=`<p class="mute">Las filas en rojo con ⚠ difieren entre publicaciones: revisa si es el mismo modelo. Lo marcado “Por confirmar” no está informado y no se suma al total. Compara no recomienda una opción: decides tú.</p>
+ h+=`<p class="mute">Las filas con fondo azul y la etiqueta “Difiere” cambian entre publicaciones: revisa si es el mismo modelo. Lo marcado “Por confirmar” no está informado y no se suma al total. Compara no recomienda una opción: decides tú.</p>
  <div class="wrap"><table><tr><td></td>${it.map(p=>`<th scope="col">${esc(p.t)}<div class="mute" style="font-weight:400">${esc(p.store)}</div><div class="row" style="margin:6px 0 0"><button class="btn sec sm" onclick="detalle('${p.id}')">Detalle</button><button class="btn sec sm" onclick="rem('${p.id}')">Quitar</button></div></th>`).join('')}</tr>`;
  const row=(l,f,cls='')=>`<tr class="${cls}"><td>${l}</td>${it.map(p=>`<td>${f(p)}</td>`).join('')}</tr>`;
  const grp=l=>`<tr class="grp"><td colspan="${it.length+1}">${l}</td></tr>`;
@@ -171,17 +172,18 @@ function vComparar(){const c=comp();
    const inc=`Incluye: precio${p.ship!==null?', despacho':''}${p.inst?', instalación y retiro':''}`;
    return `<td class="${[cm.length?'inc':'',S.flash&&p.card?'flash':''].join(' ').trim()}">${ch?`<span class="was">${money(tn)}</span>`:''}${money(t.s)}${ch?`<span class="save">Ahorras ${money(tn-t.s)} con tarjeta</span>`:''}${cm.length?`<div class="miss">⚠ Incompleto: falta confirmar ${cm.join(', ')}</div>`:'<div class="tag">Total completo</div>'}<span class="incl">${inc}</span></td>`}).join('')}</tr>`}
  if(c.show.vend){h+=grp('Vendedor y respaldo')+row('Quién publica',p=>esc(p.seller))+row('Quién responde',p=>esc(p.resp))+row('Tienda oficial',p=>p.off?'<span class="tag">Sí</span>':'No')+row('Garantía',p=>p.war===null?'<span class="pend">Sin información</span>':esc(p.war))}
- if(c.show.spec){h+=grp('Características');Object.keys(it[0].spec).forEach(k=>{const vs=it.map(p=>p.spec[k]);const df=new Set(vs).size>1;h+=row((df?'⚠ ':'')+k+(df?' (difiere)':''),p=>esc(p.spec[k]),df?'diff':'')})}
- h+=row('Mi decisión',p=>c.decision&&c.decision.id===p.id?'<span class="tag">Elegida ✓</span>':`<button class="btn sm" onclick="decidir('${p.id}')">Elegir esta</button>`);
+ if(c.show.spec){h+=grp('Características');Object.keys(it[0].spec).forEach(k=>{const vs=it.map(p=>p.spec[k]);const df=new Set(vs).size>1;h+=row(k+(df?' · Difiere':''),p=>esc(p.spec[k]),df?'diff':'')})}
+ h+=row('Mi decisión',p=>c.decision&&c.decision.id===p.id?'<span class="tag">Elegida ✓</span>':`<button class="btn sm" onclick="decidir('${p.id}')">Guardar como mi elección</button>`);
  return h+'</table></div>'}
 function decidir(id){const c=comp();if(id===null){c.decision=null;save();render();return}
  const p=P(id),t=total(p,c);
- const prev=c.decision;$('dlg').innerHTML=`<h2>${prev?'Cambiar mi elección':'Elegir esta publicación'}</h2><p><b>${esc(p.t)}</b><br>${esc(p.store)} · Total conocido: <b>${money(t.s)}</b></p>
+ const prev=c.decision;$('dlg').innerHTML=`<h2>${prev?'Cambiar mi elección':'Guardar como mi elección'}</h2><p><b>${esc(p.t)}</b><br>${esc(p.store)} · Total conocido: <b>${money(t.s)}</b></p>
  ${t.miss.length?`<p class="pend" style="white-space:normal">Aún por confirmar: ${t.miss.join(', ')}. Puedes elegir igual, pero consúltalo con el vendedor antes de pagar.</p>`:'<p class="tag">Todos los costos y la garantía están informados.</p>'}
  <p><b>Quién responde si hay un problema:</b> ${esc(p.resp)}</p>
  <label for="rz" class="mute">¿Por qué esta? (opcional)</label><textarea id="rz" rows="3" placeholder="Ej.: pago más porque sé a quién reclamar">${esc(prev?prev.reason:'')}</textarea>
- <div class="row"><button class="btn" id="ok">Confirmar decisión</button><button class="btn sec" onclick="$('dlg').close()">Cancelar</button></div>`;
+ <div class="row"><button class="btn" id="ok">Guardar mi elección</button><button class="btn sec" onclick="$('dlg').close()">Cancelar</button></div>`;
  $('dlg').showModal();$('ok').onclick=()=>{c.decision={id,reason:$('rz').value.trim(),total:t.s,pay:c.pay,at:Date.now()};c.upd=Date.now();save();$('dlg').close();render();toast('Decisión registrada en tu comparación')}}
+$('dlg').addEventListener('click',e=>{const r=e.currentTarget.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.currentTarget.close()});
 render();
 </script>
 </body>
